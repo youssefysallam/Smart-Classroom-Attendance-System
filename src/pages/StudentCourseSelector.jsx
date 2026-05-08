@@ -91,7 +91,7 @@ export default function StudentCourseSelector({ student, onSelectCourse, onLogou
               <p className="text-sm font-medium text-slate-300">No courses enrolled</p>
               <p className="text-xs text-slate-500 mt-1 max-w-xs">
                 Ask your professor to add card UID{" "}
-                <span className="font-mono text-slate-400">{student?.uid}</span>{" "}
+                <span className="font-mono text-slate-400">{student?.uid ?? "—"}</span>{" "}
                 to a course.
               </p>
             </div>
