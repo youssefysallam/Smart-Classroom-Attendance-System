@@ -1,5 +1,15 @@
+export const MOCK_COURSE = {
+  id: "demo-course-001",
+  course_id: "CS410",
+  course_name: "Smart Classroom — Demo",
+  start_time: "09:00",
+  end_time: "10:15",
+  grace_minutes: 10,
+  min_minutes_present: 30,
+  prof_id: "demo",
+};
+
 export const MOCK_STUDENTS = [
-  // ON_TIME (with leave time)
   {
     id: "s1",
     name: "Saturo Gojo",
@@ -8,8 +18,9 @@ export const MOCK_STUDENTS = [
     visitCount: 3,
     lastArrival: "2025-11-25 09:05:10",
     lastLeave: "2025-11-25 10:10:05",
-    status: "PENDING",
+    status: "ON_TIME",
     overrideStatus: null,
+    courses: ["demo-course-001"],
     attendanceRecords: [
       { date: "2025-11-11", status: "ON_TIME" },
       { date: "2025-11-13", status: "ON_TIME" },
@@ -18,8 +29,6 @@ export const MOCK_STUDENTS = [
       { date: "2025-11-25", status: "ON_TIME" },
     ],
   },
-
-  // LATE
   {
     id: "s2",
     name: "Ryomen Sukuna",
@@ -28,8 +37,9 @@ export const MOCK_STUDENTS = [
     visitCount: 4,
     lastArrival: "2025-11-25 09:15",
     lastLeave: "2025-11-25 10:20",
-    status: "PENDING",
+    status: "LATE",
     overrideStatus: null,
+    courses: ["demo-course-001"],
     attendanceRecords: [
       { date: "2025-11-11", status: "LATE" },
       { date: "2025-11-13", status: "LATE" },
@@ -38,8 +48,6 @@ export const MOCK_STUDENTS = [
       { date: "2025-11-25", status: "LATE" },
     ],
   },
-
-  // ABSENT
   {
     id: "s3",
     name: "Denji",
@@ -48,8 +56,9 @@ export const MOCK_STUDENTS = [
     visitCount: 0,
     lastArrival: "",
     lastLeave: "",
-    status: "PENDING",
+    status: "ABSENT",
     overrideStatus: null,
+    courses: ["demo-course-001"],
     attendanceRecords: [
       { date: "2025-11-11", status: "ABSENT" },
       { date: "2025-11-13", status: "ABSENT" },
@@ -58,8 +67,6 @@ export const MOCK_STUDENTS = [
       { date: "2025-11-25", status: "ABSENT" },
     ],
   },
-
-  // SKIPPED
   {
     id: "s4",
     name: "Power",
@@ -68,8 +75,9 @@ export const MOCK_STUDENTS = [
     visitCount: 1,
     lastArrival: "2025-11-25 09:02",
     lastLeave: "2025-11-25 09:30",
-    status: "PENDING",
+    status: "SKIPPED",
     overrideStatus: null,
+    courses: ["demo-course-001"],
     attendanceRecords: [
       { date: "2025-11-11", status: "LATE" },
       { date: "2025-11-13", status: "LATE" },
@@ -78,8 +86,6 @@ export const MOCK_STUDENTS = [
       { date: "2025-11-25", status: "EXCUSED" },
     ],
   },
-
-  // Forgot to clock out but class ended
   {
     id: "s5",
     name: "Reze",
@@ -88,8 +94,9 @@ export const MOCK_STUDENTS = [
     visitCount: 4,
     lastArrival: "2025-11-25 09:00",
     lastLeave: "",
-    status: "PENDING",
+    status: "ON_TIME",
     overrideStatus: null,
+    courses: ["demo-course-001"],
     attendanceRecords: [
       { date: "2025-11-11", status: "EXCUSED" },
       { date: "2025-11-13", status: "LATE" },
@@ -98,9 +105,7 @@ export const MOCK_STUDENTS = [
       { date: "2025-11-25", status: "LATE" },
     ],
   },
-
-  // Error on arrival time format
-   {
+  {
     id: "s6",
     name: "Megumi Fushigoro",
     uid: "01:H5:A3:32",
@@ -108,8 +113,9 @@ export const MOCK_STUDENTS = [
     visitCount: 6,
     lastArrival: "2025-11-25",
     lastLeave: "",
-    status: "PENDING",
+    status: "LATE",
     overrideStatus: null,
+    courses: ["demo-course-001"],
     attendanceRecords: [
       { date: "2025-11-11", status: "LATE" },
       { date: "2025-11-13", status: "EXCUSED" },
@@ -118,9 +124,7 @@ export const MOCK_STUDENTS = [
       { date: "2025-11-25", status: "LATE" },
     ],
   },
-
-  // Error on leave time format
-   {
+  {
     id: "s7",
     name: "Jogo",
     uid: "010:A5:Q7:14",
@@ -128,8 +132,9 @@ export const MOCK_STUDENTS = [
     visitCount: 7,
     lastArrival: "2025-11-25 09:00",
     lastLeave: "10:20",
-    status: "PENDING",
+    status: "LATE",
     overrideStatus: null,
+    courses: ["demo-course-001"],
     attendanceRecords: [
       { date: "2025-11-11", status: "LATE" },
       { date: "2025-11-13", status: "ON_TIME" },
@@ -138,9 +143,7 @@ export const MOCK_STUDENTS = [
       { date: "2025-11-25", status: "LATE" },
     ],
   },
-
-  // Arrives late, but has not clocked out yet
-   {
+  {
     id: "s8",
     name: "Toji",
     uid: "026:C7:E4:67",
@@ -148,8 +151,9 @@ export const MOCK_STUDENTS = [
     visitCount: 8,
     lastArrival: "2025-11-25 09:20",
     lastLeave: "",
-    status: "PENDING",
+    status: "ON_TIME",
     overrideStatus: null,
+    courses: ["demo-course-001"],
     attendanceRecords: [
       { date: "2025-11-11", status: "ABSENT" },
       { date: "2025-11-13", status: "SKIPPED" },
@@ -158,15 +162,137 @@ export const MOCK_STUDENTS = [
       { date: "2025-11-25", status: "ON_TIME" },
     ],
   },
+  {
+    id: "s9",
+    name: "Nobara Kugisaki",
+    uid: "0B:C3:44:12",
+    totalSeconds: 4500,
+    visitCount: 5,
+    lastArrival: "2025-11-25 09:03",
+    lastLeave: "2025-11-25 10:12",
+    status: "ON_TIME",
+    overrideStatus: null,
+    courses: ["demo-course-001"],
+    attendanceRecords: [
+      { date: "2025-11-11", status: "ON_TIME" },
+      { date: "2025-11-13", status: "ON_TIME" },
+      { date: "2025-11-18", status: "ON_TIME" },
+      { date: "2025-11-20", status: "ON_TIME" },
+      { date: "2025-11-25", status: "ON_TIME" },
+    ],
+  },
+  {
+    id: "s10",
+    name: "Nanami Kento",
+    uid: "0C:D4:55:23",
+    totalSeconds: 3600,
+    visitCount: 4,
+    lastArrival: "2025-11-25 09:08",
+    lastLeave: "2025-11-25 10:08",
+    status: "ON_TIME",
+    overrideStatus: null,
+    courses: ["demo-course-001"],
+    attendanceRecords: [
+      { date: "2025-11-11", status: "ON_TIME" },
+      { date: "2025-11-13", status: "LATE" },
+      { date: "2025-11-18", status: "ON_TIME" },
+      { date: "2025-11-20", status: "ON_TIME" },
+      { date: "2025-11-25", status: "ON_TIME" },
+    ],
+  },
+  {
+    id: "s11",
+    name: "Yuji Itadori",
+    uid: "0D:E5:66:34",
+    totalSeconds: 5000,
+    visitCount: 5,
+    lastArrival: "2025-11-25 09:01",
+    lastLeave: "2025-11-25 10:15",
+    status: "ON_TIME",
+    overrideStatus: null,
+    courses: ["demo-course-001"],
+    attendanceRecords: [
+      { date: "2025-11-11", status: "ON_TIME" },
+      { date: "2025-11-13", status: "ON_TIME" },
+      { date: "2025-11-18", status: "LATE" },
+      { date: "2025-11-20", status: "ON_TIME" },
+      { date: "2025-11-25", status: "ON_TIME" },
+    ],
+  },
+  {
+    id: "s12",
+    name: "Makima",
+    uid: "0E:F6:77:45",
+    totalSeconds: 800,
+    visitCount: 2,
+    lastArrival: "2025-11-25 09:45",
+    lastLeave: "2025-11-25 10:00",
+    status: "SKIPPED",
+    overrideStatus: null,
+    courses: ["demo-course-001"],
+    attendanceRecords: [
+      { date: "2025-11-11", status: "ABSENT" },
+      { date: "2025-11-13", status: "SKIPPED" },
+      { date: "2025-11-18", status: "ABSENT" },
+      { date: "2025-11-20", status: "LATE" },
+      { date: "2025-11-25", status: "SKIPPED" },
+    ],
+  },
+  {
+    id: "s13",
+    name: "Himeno",
+    uid: "0F:07:88:56",
+    totalSeconds: 3900,
+    visitCount: 4,
+    lastArrival: "2025-11-25 09:06",
+    lastLeave: "2025-11-25 10:11",
+    status: "ON_TIME",
+    overrideStatus: null,
+    courses: ["demo-course-001"],
+    attendanceRecords: [
+      { date: "2025-11-11", status: "EXCUSED" },
+      { date: "2025-11-13", status: "ON_TIME" },
+      { date: "2025-11-18", status: "ON_TIME" },
+      { date: "2025-11-20", status: "LATE" },
+      { date: "2025-11-25", status: "ON_TIME" },
+    ],
+  },
+  {
+    id: "s14",
+    name: "Shinobu Kocho",
+    uid: "11:08:99:67",
+    totalSeconds: 2400,
+    visitCount: 3,
+    lastArrival: "2025-11-25 09:12",
+    lastLeave: "2025-11-25 09:52",
+    status: "LATE",
+    overrideStatus: null,
+    courses: ["demo-course-001"],
+    attendanceRecords: [
+      { date: "2025-11-11", status: "LATE" },
+      { date: "2025-11-13", status: "ON_TIME" },
+      { date: "2025-11-18", status: "LATE" },
+      { date: "2025-11-20", status: "LATE" },
+      { date: "2025-11-25", status: "LATE" },
+    ],
+  },
+  {
+    id: "s15",
+    name: "Tanjiro Kamado",
+    uid: "12:09:AA:78",
+    totalSeconds: 5100,
+    visitCount: 5,
+    lastArrival: "2025-11-25 09:00",
+    lastLeave: "2025-11-25 10:25",
+    status: "ON_TIME",
+    overrideStatus: null,
+    courses: ["demo-course-001"],
+    attendanceRecords: [
+      { date: "2025-11-11", status: "ON_TIME" },
+      { date: "2025-11-13", status: "ON_TIME" },
+      { date: "2025-11-18", status: "ON_TIME" },
+      { date: "2025-11-20", status: "EXCUSED" },
+      { date: "2025-11-25", status: "ON_TIME" },
+    ],
+  },
 ];
-
-// GETO
-// lastArrival: 2025-12-04 10:30:00
-// Arrives after class = absence
-
-
-
-// Saturo Gojo -> s_tier gif
-// Ryomen Sukuna -> decent gif
-// Denji -> bad gif
-// Power -> awful gif

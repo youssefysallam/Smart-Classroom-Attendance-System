@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { db } from "../utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
+import { MOCK_COURSE } from "../data/mockStudents.js";
 import DashboardLayout from "../layout/DashboardLayout.jsx";
 
 export default function StudentCourseSelector({ student, onSelectCourse, onLogout }) {
@@ -23,23 +24,29 @@ export default function StudentCourseSelector({ student, onSelectCourse, onLogou
         return;
       }
 
+      if (!import.meta.env.VITE_PROJECT_ID) {
+        const mockCourses = courseIds
+          .map((id) => (id === MOCK_COURSE.id ? MOCK_COURSE : null))
+          .filter(Boolean);
+        setCourses(mockCourses);
+        setLoading(false);
+        return;
+      }
+
       try {
-        // Fetch each course doc by id from the student's global courses array
         const snaps = await Promise.all(
           courseIds.map((id) => getDoc(doc(db, "courses", id)))
         );
 
         const data = snaps
           .map((snap, index) =>
-            snap.exists()
-              ? { id: courseIds[index], ...snap.data() }
-              : null
+            snap.exists() ? { id: courseIds[index], ...snap.data() } : null
           )
           .filter(Boolean);
 
         setCourses(data);
       } catch (e) {
-        console.error("[StudentCourseSelector] Error fetching courses for student:", e);
+        console.error("[StudentCourseSelector] Error fetching courses:", e);
       } finally {
         setLoading(false);
       }
@@ -69,8 +76,6 @@ export default function StudentCourseSelector({ student, onSelectCourse, onLogou
           </div>
         </div>
 
-        <p className="text-xs text-slate-400">Select a course to view your attendance.</p>
-
         {/* Loading */}
         {loading && (
           <div className="flex items-center gap-2 py-8">
@@ -98,47 +103,43 @@ export default function StudentCourseSelector({ student, onSelectCourse, onLogou
           </div>
         )}
 
-        {/* Course cards */}
+        {/* Course row list */}
         {!loading && courses.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {courses.map((course) => (
-              <div
-                key={course.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => onSelectCourse(course)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onSelectCourse(course);
-                  }
-                }}
-                className="group text-left w-full rounded-2xl border border-slate-800
-                           bg-slate-900/70 p-4
-                           hover:border-emerald-500 hover:bg-slate-900
-                           hover:shadow-lg hover:shadow-emerald-500/50
-                           hover:-translate-y-1 hover:scale-101
-                           transition-all duration-400 cursor-pointer"
-              >
-                <div className="text-xs font-semibold text-slate-300 mb-1">
-                  {course.course_id || "(No ID)"}
-                </div>
-                <div className="text-sm font-medium text-slate-100">
-                  {course.course_name || "Untitled course"}
-                </div>
-                <div className="mt-2 text-[11px] text-slate-400">
-                  {course.start_time && course.end_time
-                    ? `Time: ${course.start_time} – ${course.end_time}`
-                    : "Time: not configured"}
-                </div>
-                <div className="mt-1 text-[11px] text-slate-500">
-                  Grace: {course.grace_minutes ?? 0} min
-                </div>
-                <div className="mt-1 text-[11px] text-slate-500">
-                  Min present: {course.min_minutes_present ?? 0} min
-                </div>
-              </div>
-            ))}
+          <div>
+            <p className="text-xs text-slate-500 mb-3">Select a course to view your attendance.</p>
+            <div className="rounded-2xl border border-slate-800 overflow-hidden">
+              {courses.map((course, i) => (
+                <button
+                  key={course.id}
+                  type="button"
+                  onClick={() => onSelectCourse(course)}
+                  className={`w-full flex items-center gap-4 px-4 py-4 text-left
+                             hover:bg-slate-900 transition-colors duration-150 cursor-pointer group
+                             ${i < courses.length - 1 ? "border-b border-slate-800/60" : ""}`}
+                >
+                  <span className="font-mono text-xs font-semibold text-slate-400 w-14 shrink-0">
+                    {course.course_id || "—"}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-slate-100 truncate">
+                      {course.course_name || "Untitled course"}
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      {course.start_time && course.end_time
+                        ? `${course.start_time} – ${course.end_time}`
+                        : "Time not set"}
+                      {" · "}Grace: {course.grace_minutes ?? 0} min
+                    </div>
+                  </div>
+                  <svg
+                    className="h-4 w-4 text-slate-600 group-hover:text-emerald-400 transition-colors shrink-0"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

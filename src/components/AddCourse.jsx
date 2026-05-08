@@ -3,8 +3,8 @@ import { db } from "../utils/firebase.js";
 import { collection, addDoc } from "firebase/firestore";
 
 export default function AddCourse({ profId, onCreated, onCancel }) {
-  const [courseId, setCourseId] = useState("");         // e.g. "CS410"
-  const [courseName, setCourseName] = useState("");     // full name
+  const [courseId, setCourseId] = useState("");
+  const [courseName, setCourseName] = useState("");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:15");
   const [graceMinutes, setGraceMinutes] = useState(10);
@@ -12,176 +12,154 @@ export default function AddCourse({ profId, onCreated, onCancel }) {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const inputClass =
+    "w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 " +
+    "focus:outline-none focus:ring-2 focus:ring-emerald-500/60 focus:border-emerald-500/60 " +
+    "hover:border-slate-600 transition-all duration-200";
+
   async function handleSubmit(e) {
     e.preventDefault();
     setErrorMsg("");
-    console.log("[AddCourse] submit clicked");
 
-    if (!courseId || !courseName || !startTime || !endTime || !graceMinutes || !minMinutesPresent) {
-        setErrorMsg("All fields are required.");
-        console.log("[AddCourse] validation failed");
-        return;
+    if (!courseId || !courseName || !startTime || !endTime) {
+      setErrorMsg("Course code, name, and times are required.");
+      return;
     }
+
+    const payload = {
+      course_id: courseId.trim(),
+      course_name: courseName.trim(),
+      start_time: startTime,
+      end_time: endTime,
+      grace_minutes: Number(graceMinutes) || 0,
+      min_minutes_present: Number(minMinutesPresent) || 0,
+      prof_id: profId,
+      createdAt: Date.now(),
+    };
 
     try {
-        setSaving(true);
+      setSaving(true);
 
-        // Debugging
-        console.log("[AddCourse] starting addDoc…");
+      if (!import.meta.env.VITE_PROJECT_ID) {
+        const localId = `local-${Date.now()}`;
+        const fullCourse = { id: localId, ...payload };
+        if (onCreated) onCreated(fullCourse);
+        return;
+      }
 
-        const payload = {
-        course_id: courseId,
-        course_name: courseName,
-        start_time: startTime,
-        end_time: endTime,
-        grace_minutes: Number(graceMinutes) || 0,
-        min_minutes_present: Number(minMinutesPresent) || 0,
-        prof_id: profId,
-        createdAt: Date.now(),
-        };
-
-        // Debugging
-        console.log("[AddCourse] payload:", payload);
-
-        const docRef = await addDoc(collection(db, "courses"), payload);
-
-        // Course has successfully been added to the database
-        console.log("[AddCourse] addDoc success, id:", docRef.id);
-
-        const fullCourse = { id: docRef.id, ...payload };
-
-        // Notify parent so it can update its list
-        if (onCreated) {
-            onCreated(fullCourse);
-        }
-
-        // Also close the form from inside just to be safe
-        if (onCancel) {
-            onCancel();
-        }
-
-        // reset local fields (in case this form is ever reused)
-        setCourseId("");
-        setCourseName("");
-        setStartTime("09:00");
-        setEndTime("10:15");
-        setGraceMinutes(10);
-        setMinMinutesPresent(30);
+      const docRef = await addDoc(collection(db, "courses"), payload);
+      const fullCourse = { id: docRef.id, ...payload };
+      if (onCreated) onCreated(fullCourse);
     } catch (e) {
-        console.error("[AddCourse] Error adding course:", e);
-        setErrorMsg("Failed to create course.");
+      console.error("[AddCourse] Error:", e);
+      setErrorMsg("Failed to create course.");
     } finally {
-        console.log("[AddCourse] finished (finally)");
-        setSaving(false);
+      setSaving(false);
     }
-}
-
-
+  }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 space-y-3"
+      className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 space-y-4"
     >
-      <h2 className="text-sm font-semibold mb-1">Create Course</h2>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-100">New Course</h2>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+      {/* Code + Name */}
+      <div className="grid grid-cols-1 sm:grid-cols-[100px,1fr] gap-3">
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
-            Course ID (e.g. CS410)
-          </label>
+          <label className="block text-xs text-slate-400 mb-1.5">Course Code</label>
           <input
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 hover:border-emerald-400 hover:bg-slate-900/80 transition-colors ease-in-out"
+            placeholder="CS410"
+            className={inputClass}
           />
         </div>
-
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
-            Course Name
-          </label>
+          <label className="block text-xs text-slate-400 mb-1.5">Course Name</label>
           <input
             value={courseName}
             onChange={(e) => setCourseName(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 hover:border-emerald-400 hover:bg-slate-900/80 transition-colors ease-in-out"
             placeholder="e.g. Smart Classroom Attendance"
+            className={inputClass}
           />
         </div>
+      </div>
 
+      {/* Start + End time */}
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
-            Start Time
-          </label>
+          <label className="block text-xs text-slate-400 mb-1.5">Start Time</label>
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer hover:border-emerald-400 hover:bg-slate-900/80 transition-colors ease-in-out"
+            className={inputClass + " cursor-pointer"}
           />
         </div>
-
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
-            End Time
-          </label>
+          <label className="block text-xs text-slate-400 mb-1.5">End Time</label>
           <input
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 hover:border-emerald-400 hover:bg-slate-900/80 transition-colors ease-in-out cursor-pointer"
+            className={inputClass + " cursor-pointer"}
           />
         </div>
+      </div>
 
+      {/* Grace + Min present */}
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
-            Grace Minutes
-          </label>
+          <label className="block text-xs text-slate-400 mb-1.5">Grace period (min)</label>
           <input
             type="number"
             value={graceMinutes}
             onChange={(e) => setGraceMinutes(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 hover:border-emerald-400 hover:bg-slate-900/80 transition-colors ease-in-out"
+            className={inputClass}
           />
         </div>
-
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
-            Min Minutes Present
-          </label>
+          <label className="block text-xs text-slate-400 mb-1.5">Min. minutes to count</label>
           <input
             type="number"
             value={minMinutesPresent}
             onChange={(e) => setMinMinutesPresent(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 hover:border-emerald-400 hover:bg-slate-900/80 transition-colors ease-in-out"
+            className={inputClass}
           />
         </div>
       </div>
 
       {errorMsg && (
-        <p className="text-xs text-red-400 mt-1">{errorMsg}</p>
+        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+          {errorMsg}
+        </p>
       )}
 
-      <div className="flex gap-2 mt-2">
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-lg border border-emerald-500 bg-emerald-600/20 px-3 py-1.5 text-xs font-medium text-emerald-200
-                     hover:bg-emerald-600/30 hover:border-emerald-400 transition-colors ease-in-out disabled:opacity-50 cursor-pointer"
-        >
-          {saving ? "Creating..." : "Create Course"}
-        </button>
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-200
-                       hover:border-slate-500 hover:bg-slate-900/80 transition-colors ease-in-out cursor-pointer"
-          >
-            Cancel
-          </button>
-        )}
-      </div>
+      <button
+        type="submit"
+        disabled={saving}
+        className="w-full rounded-xl bg-emerald-500 text-slate-950 text-sm font-semibold py-2.5
+                   hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/30
+                   active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-60"
+      >
+        {saving ? "Creating…" : "Create Course"}
+      </button>
     </form>
   );
 }

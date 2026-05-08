@@ -68,6 +68,7 @@ export default function ProfessorDashboard({ courseDocId, courseMeta, onLogout, 
   // Load course config from Firestore on mount
   useEffect(() => {
     if (!courseDocId) return;
+    if (!import.meta.env.VITE_PROJECT_ID) return;
 
     const ref = doc(db, "courses", courseDocId);
 
@@ -95,6 +96,11 @@ export default function ProfessorDashboard({ courseDocId, courseMeta, onLogout, 
 
    useEffect(() => {
     if (!courseDocId) return;
+
+    if (!import.meta.env.VITE_PROJECT_ID) {
+      setStudents(MOCK_STUDENTS);
+      return;
+    }
 
     const colRef = collection(db, "courses", courseDocId, "students");
 
@@ -125,6 +131,11 @@ export default function ProfessorDashboard({ courseDocId, courseMeta, onLogout, 
   // Save course configuration back to Firestore
   async function handleSaveConfig() {
     if (!courseDocId) return;
+
+    if (!import.meta.env.VITE_PROJECT_ID) {
+      setLastSavedAt(new Date());
+      return;
+    }
 
     try {
       setSavingConfig(true);
@@ -370,6 +381,11 @@ export default function ProfessorDashboard({ courseDocId, courseMeta, onLogout, 
   async function finalizeTodayAttendance() {
       if (!courseDocId) return;
 
+      if (!import.meta.env.VITE_PROJECT_ID) {
+        setLastSavedAttendance(new Date());
+        return;
+      }
+
       if (!students || students.length === 0) {
         window.alert(`There's no students in this course to finalize attendance!`);
         return;
@@ -472,6 +488,11 @@ export default function ProfessorDashboard({ courseDocId, courseMeta, onLogout, 
 
     async function clearLiveStateForAllStudents() {
       if (!courseDocId) return;
+
+      if (!import.meta.env.VITE_PROJECT_ID) {
+        setLastSavedClearState(new Date());
+        return;
+      }
 
       if (!students || students.length === 0) {
         window.alert("There's no students in this course to clear their stats!");
