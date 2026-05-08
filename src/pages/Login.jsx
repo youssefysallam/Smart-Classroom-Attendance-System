@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { db } from "../utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { MOCK_STUDENTS } from "../data/mockStudents.js";
+
+function lookupMockStudent(uid) {
+  return (
+    MOCK_STUDENTS.find(
+      (s) => s.uid.toUpperCase() === uid.toUpperCase()
+    ) || null
+  );
+}
 
 export default function Login({ onLogin }) {
   const [role, setRole] = useState("student");
@@ -36,6 +45,14 @@ export default function Login({ onLogin }) {
       const snap = await getDoc(ref);
 
       if (!snap.exists()) {
+        const mock = lookupMockStudent(uidUpper);
+        if (mock) {
+          onLogin({
+            role: "student",
+            user: { id: mock.uid, uid: mock.uid, name: mock.name, ...mock },
+          });
+          return;
+        }
         setError("No student found with that UID.");
         return;
       }
@@ -47,6 +64,14 @@ export default function Login({ onLogin }) {
       });
     } catch (err) {
       console.error("[Login] Error:", err);
+      const mock = lookupMockStudent(uid.trim().toUpperCase());
+      if (mock) {
+        onLogin({
+          role: "student",
+          user: { id: mock.uid, uid: mock.uid, name: mock.name, ...mock },
+        });
+        return;
+      }
       setError("Failed to sign in. Please try again.");
     } finally {
       setLoading(false);
