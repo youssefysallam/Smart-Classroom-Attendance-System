@@ -535,96 +535,104 @@ export default function ProfessorDashboard({ courseDocId, courseMeta, onLogout, 
             onMinMinutesPresentChange={setMinMinutesPresent}
           />
 
-          {/* Save button + status */}
-          <div className="mt-3 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleSaveConfig}
-              disabled={savingConfig}
-              className="rounded-lg border border-emerald-500 bg-emerald-600/20 px-3 py-1.5 text-xs font-medium text-emerald-200
-                         hover:bg-emerald-600/30 hover:border-emerald-400
-                         hover:shadow-lg hover:shadow-emerald-500/50
-                         hover:-translate-y-1 hover:scale-101 
-                         transition-all duration-400 disabled:opacity-50 cursor-pointer"
-            >
-              {savingConfig ? "Saving..." : "Save course settings"}
-            </button>
+          {/* Action panel — numbered workflow steps */}
+          <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/70 overflow-hidden">
+            {/* Step 01 */}
+            <div className="p-4 border-b border-slate-800/60">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="font-mono text-xs text-slate-600">01</span>
+                <span className="text-sm font-semibold text-slate-100">Save Course Settings</span>
+              </div>
+              <p className="text-xs text-slate-500 mb-3">Persist class timing &amp; grace config to Firestore.</p>
+              <button
+                type="button"
+                onClick={handleSaveConfig}
+                disabled={savingConfig}
+                className="w-full rounded-xl border border-emerald-500 bg-emerald-600/20 px-3 py-2 text-xs font-medium text-emerald-200
+                           hover:bg-emerald-600/30 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/30
+                           transition-all duration-200 disabled:opacity-50 cursor-pointer"
+              >
+                {savingConfig ? "Saving…" : "Save Settings"}
+              </button>
+              <div className="mt-2 min-h-[16px]">
+                {saveError && <span className="text-[11px] text-red-400">{saveError}</span>}
+                {!saveError && lastSavedAt && (
+                  <span className="text-[11px] text-slate-500">
+                    ✓ Saved at{" "}
+                    {lastSavedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                )}
+              </div>
+            </div>
 
-            {saveError && (
-              <span className="text-xs text-red-400">{saveError}</span>
-            )}
-            {!saveError && lastSavedAt && (
-              <span className="text-[11px] text-slate-500">
-                Saved at{" "}
-                {lastSavedAt.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            )}
+            {/* Step 02 */}
+            <div className="p-4 border-b border-slate-800/60">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="font-mono text-xs text-slate-600">02</span>
+                <span className="text-sm font-semibold text-slate-100">Finalize Today&apos;s Attendance</span>
+              </div>
+              <p className="text-xs text-slate-500 mb-3">Snapshot all current statuses to attendance history.</p>
+              <button
+                type="button"
+                onClick={finalizeTodayAttendance}
+                disabled={savingAttendance}
+                className="w-full rounded-xl border border-purple-500 bg-purple-600/20 px-3 py-2 text-xs font-medium text-purple-200
+                           hover:bg-purple-600/30 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/30
+                           transition-all duration-200 disabled:opacity-50 cursor-pointer"
+              >
+                {savingAttendance ? "Saving…" : "Finalize Attendance"}
+              </button>
+              <div className="mt-2 min-h-[16px]">
+                {saveAttendanceError && <span className="text-[11px] text-red-400">{saveAttendanceError}</span>}
+                {!saveAttendanceError && lastSavedAttendance && (
+                  <span className="text-[11px] text-slate-500">
+                    ✓ Done at{" "}
+                    {lastSavedAttendance.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                )}
+              </div>
+            </div>
 
-            <button
-              type="button"
-              onClick={finalizeTodayAttendance}
-              disabled={savingAttendance}
-              className="rounded-lg border border-purple-500 bg-purple-600/20 px-3 py-1.5 text-xs font-medium text-purple-200
-                         hover:bg-purple-600/30 hover:border-purple-400 
-                         hover:shadow-lg hover:shadow-purple-500/50
-                         hover:-translate-y-1 hover:scale-101
-                         transition-all duration-400 disabled:opacity-50 cursor-pointer"
-            >
-              {savingAttendance ? "Saving..." : "Finalize today's attendance"}
-            </button>
-
-            {saveAttendanceError && (
-              <span className="text-xs text-red-400">{saveAttendanceError}</span>
-            )}
-            {!saveAttendanceError && lastSavedAttendance && (
-              <span className="text-[11px] text-slate-500">
-                Attendance saved at{" "}
-                {lastSavedAttendance.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            )}
-
-            <button
-              type="button"
-              onClick={clearLiveStateForAllStudents}
-              disabled={clearingStates}
-              className="rounded-lg border border-red-500 bg-red-600/20 px-3 py-1.5 text-xs font-medium text-red-200
-                         hover:bg-red-600/30 hover:border-red-400 
-                         hover:shadow-lg hover:shadow-red-500/50
-                         hover:-translate-y-1 hover:scale-101
-                         transition-all duration-400 disabled:opacity-50 cursor-pointer"
-            >
-              {clearingStates ? "Clearing today's students' live info..." : "Clear today's students' live info"}
-            </button>
-
-            {saveClearStateError && (
-              <span className="text-xs text-red-400">{saveClearStateError}</span>
-            )}
-            {!saveClearStateError && lastSavedClearState && (
-              <span className="text-[11px] text-slate-500">
-                Today's students' live infos cleared at{" "}
-                {lastSavedClearState.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            )}
+            {/* Step 03 */}
+            <div className="p-4">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="font-mono text-xs text-slate-600">03</span>
+                <span className="text-sm font-semibold text-slate-100">Clear Live Info</span>
+              </div>
+              <p className="text-xs text-slate-500 mb-3">Reset arrivals, leaves &amp; statuses for the next session.</p>
+              <button
+                type="button"
+                onClick={clearLiveStateForAllStudents}
+                disabled={clearingStates}
+                className="w-full rounded-xl border border-red-500 bg-red-600/20 px-3 py-2 text-xs font-medium text-red-200
+                           hover:bg-red-600/30 hover:border-red-400 hover:shadow-lg hover:shadow-red-500/30
+                           transition-all duration-200 disabled:opacity-50 cursor-pointer"
+              >
+                {clearingStates ? "Clearing…" : "Clear Live Info"}
+              </button>
+              <div className="mt-2 min-h-[16px]">
+                {saveClearStateError && <span className="text-[11px] text-red-400">{saveClearStateError}</span>}
+                {!saveClearStateError && lastSavedClearState && (
+                  <span className="text-[11px] text-slate-500">
+                    ✓ Cleared at{" "}
+                    {lastSavedClearState.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        <StudentDetailsPanel
-          selectedStudent={selectedStudent}
-          computeStatus={computeStatus}
-          onOverrideStatusChange={setOverrideStatus}
-          showOverrideControls={true}
-          onDeleteStudent={handleDeleteStudent}
-          preview={true}
-        />
+        <div className="ring-1 ring-slate-800/60 rounded-2xl">
+          <StudentDetailsPanel
+            selectedStudent={selectedStudent}
+            computeStatus={computeStatus}
+            onOverrideStatusChange={setOverrideStatus}
+            showOverrideControls={true}
+            onDeleteStudent={handleDeleteStudent}
+            preview={true}
+          />
+        </div>
       </section>
 
       {/* Bottom: student cards */}
