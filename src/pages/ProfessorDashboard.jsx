@@ -11,7 +11,6 @@ import {
 } from "../utils/attendance.js";
 
 import DashboardLayout from "../layout/DashboardLayout.jsx";
-import ClassAttendanceOverview from "../components/ClassAttendanceOverview.jsx";
 import CourseConfigPanel from "../components/CourseConfigPanel.jsx";
 import StudentDetailsPanel from "../components/StudentDetailsPanel.jsx";
 import StudentsGrid from "../components/StudentsGrid.jsx";
@@ -531,118 +530,42 @@ export default function ProfessorDashboard({ courseDocId, courseMeta, onLogout, 
       }
     }
 
+  const statusCounts = students.reduce((acc, s) => {
+    const st = computeStatus(s);
+    acc[st] = (acc[st] || 0) + 1;
+    return acc;
+  }, {});
+
+  const statChips = [
+    { label: "Enrolled",    value: students.length,                                                                                              border: "border-slate-700",      text: "text-slate-200",  bg: "" },
+    { label: "On Time",     value: statusCounts.ON_TIME  || 0,                                                                                   border: "border-emerald-500/40", text: "text-emerald-300", bg: "bg-emerald-500/5" },
+    { label: "Late",        value: statusCounts.LATE     || 0,                                                                                   border: "border-amber-500/40",   text: "text-amber-300",   bg: "bg-amber-500/5" },
+    { label: "Absent",      value: (statusCounts.ABSENT  || 0) + (statusCounts.SKIPPED || 0),                                                    border: "border-red-500/40",     text: "text-red-300",     bg: "bg-red-500/5" },
+  ];
+
   return (
     <DashboardLayout title="Professor Dashboard" onLogout={onLogout} onBack={onBackToCourses}>
-      {/* Top: class overview */}
-      <ClassAttendanceOverview
-        students={students}
-        computeStatus={computeStatus}
-        preview={true}
-      />
 
-      {/* Middle: course config + student details */}
-      <section className="grid md:grid-cols-[2fr,3fr] gap-4">
-        <div>
-          <CourseConfigPanel
-            courseName={courseName}
-            startTime={startTime}
-            endTime={endTime}
-            graceMinutes={graceMinutes}
-            minMinutesPresent={minMinutesPresent}
-            onCourseNameChange={setCourseName}
-            onStartTimeChange={setStartTime}
-            onEndTimeChange={setEndTime}
-            onGraceMinutesChange={setGraceMinutes}
-            onMinMinutesPresentChange={setMinMinutesPresent}
-          />
-
-          {/* Action panel — numbered workflow steps */}
-          <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/70 overflow-hidden">
-            {/* Step 01 */}
-            <div className="p-4 border-b border-slate-800/60">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-mono text-xs text-slate-600">01</span>
-                <span className="text-sm font-semibold text-slate-100">Save Course Settings</span>
-              </div>
-              <p className="text-xs text-slate-500 mb-3">Persist class timing &amp; grace config to Firestore.</p>
-              <button
-                type="button"
-                onClick={handleSaveConfig}
-                disabled={savingConfig}
-                className="w-full rounded-xl border border-emerald-500 bg-emerald-600/20 px-3 py-2 text-xs font-medium text-emerald-200
-                           hover:bg-emerald-600/30 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/30
-                           transition-all duration-200 disabled:opacity-50 cursor-pointer"
-              >
-                {savingConfig ? "Saving…" : "Save Settings"}
-              </button>
-              <div className="mt-2 min-h-[16px]">
-                {saveError && <span className="text-[11px] text-red-400">{saveError}</span>}
-                {!saveError && lastSavedAt && (
-                  <span className="text-[11px] text-slate-500">
-                    ✓ Saved at{" "}
-                    {lastSavedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Step 02 */}
-            <div className="p-4 border-b border-slate-800/60">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-mono text-xs text-slate-600">02</span>
-                <span className="text-sm font-semibold text-slate-100">Finalize Today&apos;s Attendance</span>
-              </div>
-              <p className="text-xs text-slate-500 mb-3">Snapshot all current statuses to attendance history.</p>
-              <button
-                type="button"
-                onClick={finalizeTodayAttendance}
-                disabled={savingAttendance}
-                className="w-full rounded-xl border border-purple-500 bg-purple-600/20 px-3 py-2 text-xs font-medium text-purple-200
-                           hover:bg-purple-600/30 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/30
-                           transition-all duration-200 disabled:opacity-50 cursor-pointer"
-              >
-                {savingAttendance ? "Saving…" : "Finalize Attendance"}
-              </button>
-              <div className="mt-2 min-h-[16px]">
-                {saveAttendanceError && <span className="text-[11px] text-red-400">{saveAttendanceError}</span>}
-                {!saveAttendanceError && lastSavedAttendance && (
-                  <span className="text-[11px] text-slate-500">
-                    ✓ Done at{" "}
-                    {lastSavedAttendance.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Step 03 */}
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-mono text-xs text-slate-600">03</span>
-                <span className="text-sm font-semibold text-slate-100">Clear Live Info</span>
-              </div>
-              <p className="text-xs text-slate-500 mb-3">Reset arrivals, leaves &amp; statuses for the next session.</p>
-              <button
-                type="button"
-                onClick={clearLiveStateForAllStudents}
-                disabled={clearingStates}
-                className="w-full rounded-xl border border-red-500 bg-red-600/20 px-3 py-2 text-xs font-medium text-red-200
-                           hover:bg-red-600/30 hover:border-red-400 hover:shadow-lg hover:shadow-red-500/30
-                           transition-all duration-200 disabled:opacity-50 cursor-pointer"
-              >
-                {clearingStates ? "Clearing…" : "Clear Live Info"}
-              </button>
-              <div className="mt-2 min-h-[16px]">
-                {saveClearStateError && <span className="text-[11px] text-red-400">{saveClearStateError}</span>}
-                {!saveClearStateError && lastSavedClearState && (
-                  <span className="text-[11px] text-slate-500">
-                    ✓ Cleared at{" "}
-                    {lastSavedClearState.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                )}
-              </div>
-            </div>
+      {/* ── Row 1: stat chips ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {statChips.map(({ label, value, border, text, bg }) => (
+          <div key={label} className={`rounded-2xl border ${border} ${bg} px-4 py-3`}>
+            <div className={`text-2xl font-bold tabular-nums ${text}`}>{value}</div>
+            <div className="text-xs text-slate-500 mt-0.5">{label}</div>
           </div>
-        </div>
+        ))}
+      </div>
+
+      {/* ── Row 2: roster (left) + student details (right) ── */}
+      <section className="grid md:grid-cols-[3fr,2fr] gap-4">
+        <StudentsGrid
+          students={students}
+          selectedStudent={selectedStudent}
+          computeStatus={computeStatus}
+          onSelectStudent={setSelectedStudent}
+          setShowAddStudentForm={setShowAddStudentForm}
+          preview={true}
+        />
 
         <StudentDetailsPanel
           selectedStudent={selectedStudent}
@@ -654,23 +577,107 @@ export default function ProfessorDashboard({ courseDocId, courseMeta, onLogout, 
         />
       </section>
 
-      {/* Bottom: student cards */}
-      <StudentsGrid
-        students={students}
-        selectedStudent={selectedStudent}
-        computeStatus={computeStatus}
-        onSelectStudent={setSelectedStudent}
-        setShowAddStudentForm={setShowAddStudentForm}
-        preview={true}
-      />
+      {/* ── Row 3: course config (left) + actions (right) ── */}
+      <section className="grid md:grid-cols-2 gap-4">
+        <CourseConfigPanel
+          courseName={courseName}
+          startTime={startTime}
+          endTime={endTime}
+          graceMinutes={graceMinutes}
+          minMinutesPresent={minMinutesPresent}
+          onCourseNameChange={setCourseName}
+          onStartTimeChange={setStartTime}
+          onEndTimeChange={setEndTime}
+          onGraceMinutesChange={setGraceMinutes}
+          onMinMinutesPresentChange={setMinMinutesPresent}
+        />
+
+        {/* Action steps */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 overflow-hidden">
+          <div className="p-4 border-b border-slate-800/60">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="font-mono text-xs text-slate-600">01</span>
+              <span className="text-sm font-semibold text-slate-100">Save Course Settings</span>
+            </div>
+            <p className="text-xs text-slate-500 mb-3">Persist class timing &amp; grace config.</p>
+            <button
+              type="button"
+              onClick={handleSaveConfig}
+              disabled={savingConfig}
+              className="w-full rounded-xl border border-emerald-500 bg-emerald-600/20 px-3 py-2 text-xs font-medium text-emerald-200
+                         hover:bg-emerald-600/30 hover:border-emerald-400 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+            >
+              {savingConfig ? "Saving…" : "Save Settings"}
+            </button>
+            <div className="mt-2 min-h-[16px]">
+              {saveError && <span className="text-[11px] text-red-400">{saveError}</span>}
+              {!saveError && lastSavedAt && (
+                <span className="text-[11px] text-slate-500">
+                  ✓ Saved at {lastSavedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 border-b border-slate-800/60">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="font-mono text-xs text-slate-600">02</span>
+              <span className="text-sm font-semibold text-slate-100">Finalize Today&apos;s Attendance</span>
+            </div>
+            <p className="text-xs text-slate-500 mb-3">Snapshot all current statuses to history.</p>
+            <button
+              type="button"
+              onClick={finalizeTodayAttendance}
+              disabled={savingAttendance}
+              className="w-full rounded-xl border border-purple-500 bg-purple-600/20 px-3 py-2 text-xs font-medium text-purple-200
+                         hover:bg-purple-600/30 hover:border-purple-400 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+            >
+              {savingAttendance ? "Saving…" : "Finalize Attendance"}
+            </button>
+            <div className="mt-2 min-h-[16px]">
+              {saveAttendanceError && <span className="text-[11px] text-red-400">{saveAttendanceError}</span>}
+              {!saveAttendanceError && lastSavedAttendance && (
+                <span className="text-[11px] text-slate-500">
+                  ✓ Done at {lastSavedAttendance.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="font-mono text-xs text-slate-600">03</span>
+              <span className="text-sm font-semibold text-slate-100">Clear Live Info</span>
+            </div>
+            <p className="text-xs text-slate-500 mb-3">Reset arrivals, leaves &amp; statuses for next session.</p>
+            <button
+              type="button"
+              onClick={clearLiveStateForAllStudents}
+              disabled={clearingStates}
+              className="w-full rounded-xl border border-red-500 bg-red-600/20 px-3 py-2 text-xs font-medium text-red-200
+                         hover:bg-red-600/30 hover:border-red-400 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+            >
+              {clearingStates ? "Clearing…" : "Clear Live Info"}
+            </button>
+            <div className="mt-2 min-h-[16px]">
+              {saveClearStateError && <span className="text-[11px] text-red-400">{saveClearStateError}</span>}
+              {!saveClearStateError && lastSavedClearState && (
+                <span className="text-[11px] text-slate-500">
+                  ✓ Cleared at {lastSavedClearState.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {showAddStudentForm && (
-          <AddStudent
-            courseDocId={courseDocId}
-            onCreated={handleStudentCreated}
-            onCancel={() => setShowAddStudentForm(false)}
-          />
-        )}
+        <AddStudent
+          courseDocId={courseDocId}
+          onCreated={handleStudentCreated}
+          onCancel={() => setShowAddStudentForm(false)}
+        />
+      )}
     </DashboardLayout>
   );
 }

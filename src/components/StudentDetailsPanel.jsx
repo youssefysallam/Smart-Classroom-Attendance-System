@@ -1,13 +1,10 @@
 import {
   STATUS_OPTIONS,
-  formatSessionDuration,
   getEffectiveStatus,
   getAttendanceSummary,
   getAttendanceColorClass,
-  getAttendanceEmoji,
 } from "../utils/attendance";
 import { formatTotalDuration } from "../utils/time";
-
 import { getTodayKeyLocal } from "../utils/date";
 
 import sTierGif from "../assets/attendance/s_tier.gif";
@@ -15,28 +12,35 @@ import decentGif from "../assets/attendance/decent.gif";
 import badGif from "../assets/attendance/bad.gif";
 import awfulGif from "../assets/attendance/awful.gif";
 
-function getAttendanceImage(percent) {
-  if (percent >= 90) return sTierGif;
-  if (percent >= 70) return decentGif;
-  if (percent >= 40) return badGif;
-  return awfulGif;
-}
+const HERO = {
+  ON_TIME:  { bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-300", dot: "bg-emerald-500" },
+  LATE:     { bg: "bg-amber-500/10",   border: "border-amber-500/30",   text: "text-amber-300",   dot: "bg-amber-500"  },
+  ABSENT:   { bg: "bg-red-500/10",     border: "border-red-500/30",     text: "text-red-300",     dot: "bg-red-500"    },
+  SKIPPED:  { bg: "bg-red-400/10",     border: "border-red-400/30",     text: "text-red-300",     dot: "bg-red-400"    },
+  EXCUSED:  { bg: "bg-purple-500/10",  border: "border-purple-500/30",  text: "text-purple-300",  dot: "bg-purple-500" },
+  PENDING:  { bg: "bg-amber-400/10",   border: "border-amber-400/30",   text: "text-amber-300",   dot: "bg-amber-400"  },
+  UNKNOWN:  { bg: "",                  border: "border-slate-700",      text: "text-slate-400",   dot: "bg-slate-600"  },
+};
 
-function getAttendanceCaption(percent) {
-  if (percent >= 90) return "NERD";
-  if (percent >= 70) return "Decent attendance...or is it?";
-  if (percent >= 40) return "POV: You're failing the course";
-  return "Your professor about to Hollow Purple your ahh";
-}
+const PILL = {
+  ON_TIME:  "bg-emerald-500/25 border-emerald-500 text-emerald-200",
+  LATE:     "bg-amber-500/25  border-amber-500  text-amber-200",
+  ABSENT:   "bg-red-500/25    border-red-500    text-red-200",
+  SKIPPED:  "bg-red-400/25    border-red-400    text-red-200",
+  EXCUSED:  "bg-purple-500/25 border-purple-500 text-purple-200",
+  "":       "bg-slate-700/40  border-slate-500  text-slate-200",
+};
 
-function getAttendanceShadow(percent) {
-  if (percent >= 90) return "shadow-emerald-500";
-  if (percent >= 70) return "shadow-yellow-500";
-  if (percent >= 40) return "shadow-orange-500";
-  return "shadow-red-500";
-}
+const STATUS_COLOR = {
+  ON_TIME: "text-emerald-400",
+  LATE:    "text-amber-400",
+  ABSENT:  "text-red-400",
+  SKIPPED: "text-red-300",
+  EXCUSED: "text-purple-400",
+  PENDING: "text-amber-300",
+};
 
-function getStatusBorderColor(status) {
+function borderL(status) {
   switch (status) {
     case "ON_TIME":  return "border-l-emerald-500";
     case "LATE":     return "border-l-amber-500";
@@ -47,6 +51,21 @@ function getStatusBorderColor(status) {
   }
 }
 
+function gif(p) {
+  if (p >= 90) return { src: sTierGif, caption: "NERD", shadow: "shadow-emerald-500/40" };
+  if (p >= 70) return { src: decentGif, caption: "Decent attendance...or is it?", shadow: "shadow-yellow-500/40" };
+  if (p >= 40) return { src: badGif, caption: "POV: You're failing the course", shadow: "shadow-orange-500/40" };
+  return { src: awfulGif, caption: "Your professor about to Hollow Purple your ahh", shadow: "shadow-red-500/40" };
+}
+
+function ts(val) {
+  if (!val) return "—";
+  const s = String(val);
+  const parts = s.split(" ");
+  if (parts.length >= 2) return parts[1].slice(0, 5);
+  return s;
+}
+
 export default function StudentDetailsPanel({
   selectedStudent,
   computeStatus,
@@ -55,18 +74,17 @@ export default function StudentDetailsPanel({
   onDeleteStudent,
   preview,
 }) {
-  // Nothing selected
   if (!selectedStudent) {
     return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 flex flex-col items-center justify-center gap-3 min-h-[140px]">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800/80 border border-slate-700">
-          <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 flex flex-col items-center justify-center gap-3 min-h-[200px] p-6">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800/80 border border-slate-700">
+          <svg className="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
           </svg>
         </div>
         <div className="text-center">
           <p className="text-sm font-medium text-slate-400">No student selected</p>
-          <p className="text-xs text-slate-600 mt-0.5">Click a student card to view details.</p>
+          <p className="text-xs text-slate-600 mt-0.5">Select a student from the roster.</p>
         </div>
       </div>
     );
@@ -75,237 +93,199 @@ export default function StudentDetailsPanel({
   let viewStudent = selectedStudent;
 
   if (!preview) {
-    // student view: prefer today's finalized snapshot if it exists
-    const records = Array.isArray(selectedStudent.attendanceRecords)
-      ? selectedStudent.attendanceRecords
-      : [];
-
-    //const todayKey = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const recs = Array.isArray(selectedStudent.attendanceRecords)
+      ? selectedStudent.attendanceRecords : [];
     const todayKey = getTodayKeyLocal();
-    const todayRecord = records.find((r) => r.date === todayKey);
-
-    if (todayRecord) {
+    const todayRec = recs.find((r) => r.date === todayKey);
+    if (todayRec) {
       viewStudent = {
         ...selectedStudent,
-        // Use finalized snapshot as the primary source
-        lastArrival:
-          todayRecord.lastArrival != null
-            ? todayRecord.lastArrival
-            : selectedStudent.lastArrival,
-        lastLeave:
-          todayRecord.lastLeave != null
-            ? todayRecord.lastLeave
-            : selectedStudent.lastLeave,
-        totalSeconds:
-          typeof todayRecord.durationSeconds === "number"
-            ? todayRecord.durationSeconds
-            : selectedStudent.totalSeconds,
-        status:
-          todayRecord.overrideStatus ||
-          todayRecord.status ||
-          selectedStudent.status,
-        overrideStatus:
-          todayRecord.overrideStatus ?? selectedStudent.overrideStatus,
+        lastArrival:   todayRec.lastArrival   != null  ? todayRec.lastArrival   : selectedStudent.lastArrival,
+        lastLeave:     todayRec.lastLeave     != null  ? todayRec.lastLeave     : selectedStudent.lastLeave,
+        totalSeconds:  typeof todayRec.durationSeconds === "number" ? todayRec.durationSeconds : selectedStudent.totalSeconds,
+        status:        todayRec.overrideStatus || todayRec.status || selectedStudent.status,
+        overrideStatus: todayRec.overrideStatus ?? selectedStudent.overrideStatus,
       };
     }
   }
 
   const effectiveStatus = getEffectiveStatus(viewStudent, computeStatus, preview);
-  const { attended, total, percent } = getAttendanceSummary(
-    viewStudent,
-    effectiveStatus,
-    preview
-  );
+  const { attended, total, percent } = getAttendanceSummary(viewStudent, effectiveStatus, preview);
   const color = getAttendanceColorClass(percent);
-  const emoji = getAttendanceEmoji(percent);
-  const imageSrc = total > 0 ? getAttendanceImage(percent) : null;
-  const caption = total > 0 ? getAttendanceCaption(percent) : null;
-  const imageShadow = total > 0 ? getAttendanceShadow(percent) : null;
+  const hero = HERO[effectiveStatus] || HERO.UNKNOWN;
+  const currentOverride = viewStudent.overrideStatus || "";
 
-  const records = Array.isArray(viewStudent.attendanceRecords)
-    ? [...viewStudent.attendanceRecords]
+  const sortedRecords = Array.isArray(viewStudent.attendanceRecords)
+    ? [...viewStudent.attendanceRecords].sort((a, b) => b.date.localeCompare(a.date))
     : [];
 
-  if (records.length > 0) {
-    records.sort((a, b) => b.date.localeCompare(a.date)); // newest first
-  }
+  const g = total > 0 ? gif(percent) : null;
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-      <h2 className="text-sm font-semibold mb-3">Student details</h2>
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 overflow-hidden flex flex-col">
 
-      <div className="text-sm text-slate-200 space-y-2">
-        <div>
-          <span className="text-slate-400 text-xs">Name</span>
-          <div className="font-medium">{viewStudent.name}</div>
-        </div>
-
-        <div>
-          <span className="text-slate-400 text-xs">UID</span>
-          <div className="text-xs text-slate-300">
-            {viewStudent.uid}
+      {/* ── Header: name + status ── */}
+      <div className={`px-4 pt-4 pb-3 border-b border-slate-800/60 ${hero.bg}`}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${hero.dot}`} />
+              <span className="text-base font-bold text-slate-100 truncate">{viewStudent.name}</span>
+            </div>
+            <span className="font-mono text-[11px] text-slate-400 bg-slate-800/80 border border-slate-700 rounded-md px-1.5 py-0.5">
+              {viewStudent.uid}
+            </span>
           </div>
-        </div>
-
-        <div>
-          <span className="text-slate-400 text-xs">Total Time</span>
-          <div className="text-xs text-slate-300">
-            {formatTotalDuration(viewStudent.totalSeconds || 0)}
-          </div>
-        </div>
-
-        <div>
-          <span className="text-slate-400 text-xs">Arrival Time</span>
-          <div className="text-xs">
-            {viewStudent.lastArrival || "N/A"}
-          </div>
-        </div>
-
-        <div>
-          <span className="text-slate-400 text-xs">Leave Time</span>
-          <div className="text-xs">
-            {viewStudent.lastLeave || "N/A"}
-          </div>
-        </div>
-        <div>
-          <span className="text-slate-400 text-xs">Status</span>
-          <div className="text-xs">
+          <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full border ${hero.border} ${hero.text} ${hero.bg}`}>
             {effectiveStatus}
-          </div>
-        </div>
-
-        {showOverrideControls && (
-          <div>
-            <span className="text-slate-400 text-xs">Override Status</span>
-            <select
-              className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/60 focus:border-emerald-500/60
-                         hover:border-emerald-500 hover:bg-slate-900 transition-colors ease-in-out cursor-pointer"
-              value={viewStudent.overrideStatus || ""}
-              onChange={(e) =>
-                onOverrideStatusChange(viewStudent.id, e.target.value)
-              }
-            >
-              <option value="">Use Automatic</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <p className="text-[10px] text-slate-500 mt-2">
-              Choosing a value here locks this student&apos;s status and
-              ignores automatic rules until you switch back to
-              <span className="italic"> Use automatic</span>.
-            </p>
-          </div>
-        )}
-
-        {/* Attendance summary */}
-        <div>
-          <span className="text-slate-400 text-xs">Attendance</span>
-          <div className="mt-1 flex items-center justify-between">
-            <div>
-              <div className={`text-sm font-semibold ${color}`}>
-                {total > 0
-                  ? `${percent.toFixed(2)}% attendance (${attended}/${total} sessions)`
-                  : "No attendance data"}
-              </div>
-              {total > 0 && (
-                <div className="text-[10px] text-slate-500">
-                  Present = ON_TIME, LATE, or EXCUSED
-                </div>
-              )}
-            </div>
-            <div className="text-2xl">{emoji}</div>
-          </div>
-
-          {imageSrc && (
-            <div className="mt-3 flex flex-col items-center gap-2">
-              {caption && (
-                <div className="text-[19px] text-slate-400 text-center max-w-s">
-                  {caption}
-                </div>
-              )}
-              <img
-                src={imageSrc}
-                alt="Attendance mood gif"
-                className={`h-60 w-60 rounded-xl object-cover border border-slate-700 
-                           shadow-xl ${imageShadow}`}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Delete button (professor only) */}
-        {showOverrideControls && (
-          <div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onDeleteStudent && viewStudent) {
-                  onDeleteStudent(viewStudent);
-                }
-              }}
-              className="text-[12px] mt-2 px-2 py-0.5 rounded-full
-                         border border-red-500/60 text-red-300 bg-slate-900/80
-                         hover:bg-red-500/10 hover:border-red-400 
-                         hover:shadow-lg hover:shadow-red-500/50
-                         hover:-translate-y-1 hover:scale-101
-                         transition-all duration-400 cursor-pointer"
-            >
-              Delete Student
-            </button>
-          </div>
-        )}
-
-        {/* Session history */}
-        <div className="mt-3">
-          <span className="text-slate-400 text-xs">Session history</span>
-          {records.length === 0 ? (
-            <p className="text-[11px] text-slate-500 mt-1">
-              No saved sessions yet.
-            </p>
-          ) : (
-            <div className="mt-1 max-h-40 overflow-y-auto pr-1 space-y-1">
-              {records.map((rec, idx) => {
-                const effStatus =
-                  rec.overrideStatus || rec.status || "UNKNOWN";
-                return (
-                  <div
-                    key={`${rec.date}-${idx}`}
-                    className={`flex justify-between items-baseline text-[11px] border border-slate-800 border-l-[3px] ${getStatusBorderColor(effStatus)} rounded-lg px-2 py-1 bg-slate-950/60`}
-                  >
-                    <div>
-                      <div className="font-medium text-slate-100">
-                        {rec.date}
-                      </div>
-                      <div className="text-slate-400">
-                        {(rec.lastArrival || "N/A") +
-                          " → " +
-                          (rec.lastLeave || "N/A")}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="inline-flex items-center rounded-full border border-slate-600 px-2 py-0.5 text-[10px] text-slate-100">
-                        {effStatus}
-                        {rec.overrideStatus && (
-                          <span className="ml-1 text-[9px] text-amber-300">
-                            (override)
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-slate-400 mt-0.5">
-                        {formatTotalDuration(rec.durationSeconds || 0)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          </span>
         </div>
       </div>
+
+      {/* ── Stats: in / out / duration ── */}
+      <div className="grid grid-cols-3 divide-x divide-slate-800/60 border-b border-slate-800/60">
+        {[
+          { label: "In",       val: ts(viewStudent.lastArrival) },
+          { label: "Out",      val: ts(viewStudent.lastLeave)   },
+          { label: "Duration", val: formatTotalDuration(viewStudent.totalSeconds || 0) },
+        ].map(({ label, val }) => (
+          <div key={label} className="px-3 py-2.5 text-center">
+            <div className="text-[10px] text-slate-500 mb-0.5">{label}</div>
+            <div className="text-xs font-mono font-semibold text-slate-200">{val}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Override pills (professor only) ── */}
+      {showOverrideControls && (
+        <div className="px-4 py-3 border-b border-slate-800/60">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">
+            Override
+          </div>
+          <div className="flex gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => onOverrideStatusChange(viewStudent.id, "")}
+              className={`px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition-all duration-150 cursor-pointer
+                ${!currentOverride
+                  ? PILL[""]
+                  : "border-slate-700/60 text-slate-600 hover:border-slate-600 hover:text-slate-400"}`}
+            >
+              Auto
+            </button>
+            {STATUS_OPTIONS.map((s) => {
+              const isActive = currentOverride === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => onOverrideStatusChange(viewStudent.id, s)}
+                  className={`px-2.5 py-1 rounded-lg border text-[10px] font-semibold transition-all duration-150 cursor-pointer
+                    ${isActive
+                      ? (PILL[s] || PILL[""])
+                      : "border-slate-700/60 text-slate-600 hover:border-slate-600 hover:text-slate-400"}`}
+                >
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+          {currentOverride && (
+            <p className="text-[10px] text-amber-500/80 mt-1.5">
+              ↑ Override active — automatic rules bypassed
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ── Attendance bar ── */}
+      {total > 0 && (
+        <div className="px-4 py-3 border-b border-slate-800/60">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+              Attendance
+            </span>
+            <span className={`text-sm font-bold ${color}`}>
+              {percent.toFixed(0)}%
+              <span className="text-slate-500 text-xs font-normal ml-1">{attended}/{total}</span>
+            </span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+            <div
+              className={`h-1.5 rounded-full transition-all duration-700 ${
+                percent >= 80 ? "bg-emerald-500" : percent >= 60 ? "bg-amber-500" : "bg-red-500"
+              }`}
+              style={{ width: `${Math.min(percent, 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── GIF ── */}
+      {g && (
+        <div className="px-4 py-3 border-b border-slate-800/60 flex flex-col items-center gap-2">
+          <p className="text-xs font-medium text-slate-400">{g.caption}</p>
+          <img
+            src={g.src}
+            alt="Attendance mood"
+            className={`h-36 w-36 rounded-xl object-cover border border-slate-700 shadow-lg ${g.shadow}`}
+          />
+        </div>
+      )}
+
+      {/* ── Session history ── */}
+      <div className="px-4 py-3 flex-1">
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">
+          Sessions
+        </div>
+        {sortedRecords.length === 0 ? (
+          <p className="text-xs text-slate-500">No sessions recorded yet.</p>
+        ) : (
+          <div className="max-h-52 overflow-y-auto space-y-1 pr-0.5">
+            {sortedRecords.map((rec, idx) => {
+              const effStatus = rec.overrideStatus || rec.status || "UNKNOWN";
+              const tagColor = STATUS_COLOR[effStatus] || "text-slate-400";
+              return (
+                <div
+                  key={`${rec.date}-${idx}`}
+                  className={`flex items-center justify-between text-[11px] border border-slate-800/80 border-l-[3px] ${borderL(effStatus)} rounded-lg px-2.5 py-1.5 bg-slate-950/50`}
+                >
+                  <div>
+                    <span className="font-semibold text-slate-200">{rec.date}</span>
+                    <span className="text-slate-500 ml-2 font-mono text-[10px]">
+                      {ts(rec.lastArrival)} → {ts(rec.lastLeave)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-mono text-slate-500 text-[10px]">
+                      {formatTotalDuration(rec.durationSeconds || 0)}
+                    </span>
+                    <span className={`font-semibold text-[10px] ${tagColor}`}>
+                      {effStatus}
+                      {rec.overrideStatus && <span className="text-amber-400 ml-0.5">↑</span>}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Delete ── */}
+      {showOverrideControls && onDeleteStudent && (
+        <div className="px-4 pb-4">
+          <button
+            type="button"
+            onClick={() => onDeleteStudent(viewStudent)}
+            className="w-full text-[11px] py-1.5 rounded-xl border border-red-500/25 text-red-400/60
+                       hover:bg-red-500/5 hover:border-red-500/40 hover:text-red-300
+                       transition-all duration-200 cursor-pointer"
+          >
+            Remove from course
+          </button>
+        </div>
+      )}
     </div>
   );
 }

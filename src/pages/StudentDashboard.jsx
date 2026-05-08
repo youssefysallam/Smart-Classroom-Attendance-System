@@ -13,7 +13,6 @@ import { formatTotalDuration } from "../utils/time.jsx";
 
 import DashboardLayout from "../layout/DashboardLayout.jsx";
 import StudentDetailsPanel from "../components/StudentDetailsPanel.jsx";
-import StudentAttendanceOverview from "../components/StudentAttendanceOverview.jsx";
 import StudentCourseConfigPanel from "../components/StudentCourseConfigPanel.jsx";
 
 import { getTodayKeyLocal } from "../utils/date";
@@ -214,19 +213,86 @@ export default function StudentDashboard({
   return (
     <DashboardLayout title="Student Dashboard" onLogout={onLogout} onBack={onBackToCourses}>
       {loadError && (
-        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mb-3">
+        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
           {loadError}
         </p>
       )}
 
-      {/* Top overview */}
-      <StudentAttendanceOverview
-        student={displayStudent}
-        computeStatus={computeStatus}
-      />
+      {/* ── Row 1: status hero (left) + course info (right) ── */}
+      <section className="grid md:grid-cols-[3fr,2fr] gap-4">
 
-      {/* Middle: course info + details */}
-      <section className="grid md:grid-cols-[2fr,3fr] gap-4">
+        {/* Status hero */}
+        <div className={`rounded-2xl border ${heroStyle.border} ${heroStyle.bg} p-5 flex flex-col`}>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2.5">
+              <div className={`h-3 w-3 rounded-full ${heroStyle.dot}`} />
+              <span className={`text-2xl font-bold tracking-tight ${heroStyle.text}`}>
+                {heroStyle.label}
+              </span>
+            </div>
+            <span className={`font-mono text-xs px-2.5 py-1 rounded-full border ${heroStyle.border} ${heroStyle.text}`}>
+              {effectiveStatus}
+            </span>
+          </div>
+
+          {/* Arrival / Leave / Duration */}
+          <div className="grid grid-cols-3 gap-3 text-xs mb-4">
+            {[
+              { label: "Arrived",  val: displayStudent.lastArrival || "—" },
+              { label: "Left",     val: displayStudent.lastLeave   || "—" },
+              { label: "Duration", val: formatTotalDuration(displayStudent.totalSeconds || 0) },
+            ].map(({ label, val }) => (
+              <div key={label} className="rounded-xl bg-black/20 border border-slate-800/60 px-3 py-2.5">
+                <div className="text-slate-500 mb-0.5">{label}</div>
+                <div className="font-mono text-slate-200 truncate">{val}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Attendance bar */}
+          {attendanceSummary.total > 0 && (
+            <div className="mt-auto">
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="text-slate-500">Overall attendance</span>
+                <span className="text-slate-300 font-semibold">
+                  {attendanceSummary.percent.toFixed(0)}%
+                  <span className="text-slate-600 font-normal ml-1">
+                    ({attendanceSummary.attended}/{attendanceSummary.total})
+                  </span>
+                </span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-slate-800/80 overflow-hidden">
+                <div
+                  className={`h-1.5 rounded-full transition-all duration-700 ${
+                    attendanceSummary.percent >= 80 ? "bg-emerald-500" :
+                    attendanceSummary.percent >= 60 ? "bg-amber-500" : "bg-red-500"
+                  }`}
+                  style={{ width: `${Math.min(attendanceSummary.percent, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Dot timeline */}
+          {records.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-slate-800/40">
+              <div className="text-[10px] text-slate-600 mb-2">Past sessions</div>
+              <div className="flex gap-3 flex-wrap">
+                {[...records].reverse().slice(0, 12).map((rec, i) => (
+                  <div key={i} className="flex flex-col items-center gap-1">
+                    <div
+                      className={`h-2 w-2 rounded-full ${getDotColor(rec.status)}`}
+                      title={`${rec.date}: ${rec.status}`}
+                    />
+                    <span className="text-[9px] font-mono text-slate-700">{rec.date.slice(5)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Course info */}
         <StudentCourseConfigPanel
           courseName={courseName}
           startTime={startTime}
@@ -234,94 +300,16 @@ export default function StudentDashboard({
           graceMinutes={graceMinutes}
           minMinutesPresent={minMinutesPresent}
         />
-
-        <StudentDetailsPanel
-          selectedStudent={displayStudent}
-          computeStatus={computeStatus}
-          onOverrideStatusChange={() => {}}
-          showOverrideControls={false}
-          preview={false}
-        />
       </section>
 
-      {/* Bottom: status hero + session timeline */}
-      <section>
-        <h2 className="text-sm font-semibold text-slate-100 pb-2 border-b border-slate-800/60 mb-4">
-          Today&apos;s Status
-        </h2>
-
-        {/* Status hero card */}
-        <div className={`rounded-2xl border ${heroStyle.border} ${heroStyle.bg} p-5 mb-4`}>
-          <div className="flex items-center justify-between mb-4">
-            <span className={`text-2xl font-bold tracking-tight ${heroStyle.text}`}>
-              {heroStyle.label}
-            </span>
-            <span className={`font-mono text-xs px-2.5 py-1 rounded-full border ${heroStyle.border} ${heroStyle.text} bg-black/20`}>
-              {effectiveStatus}
-            </span>
-          </div>
-          <div className="grid grid-cols-3 gap-4 text-xs">
-            <div>
-              <div className="text-slate-500 mb-0.5">Arrived</div>
-              <div className="font-mono text-slate-200 truncate">
-                {displayStudent.lastArrival || "—"}
-              </div>
-            </div>
-            <div>
-              <div className="text-slate-500 mb-0.5">Left</div>
-              <div className="font-mono text-slate-200 truncate">
-                {displayStudent.lastLeave || "—"}
-              </div>
-            </div>
-            <div>
-              <div className="text-slate-500 mb-0.5">Duration</div>
-              <div className="font-mono text-slate-200">
-                {formatTotalDuration(displayStudent.totalSeconds || 0)}
-              </div>
-            </div>
-          </div>
-          {attendanceSummary.total > 0 && (
-            <div className="mt-4 pt-3 border-t border-slate-800/40">
-              <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="text-slate-500">Overall attendance</span>
-                <span className="text-slate-300 font-medium">
-                  {attendanceSummary.percent.toFixed(0)}%
-                  <span className="text-slate-600 font-normal">
-                    {" "}({attendanceSummary.attended}/{attendanceSummary.total})
-                  </span>
-                </span>
-              </div>
-              <div className="h-1 w-full rounded-full bg-slate-800 overflow-hidden">
-                <div
-                  className="h-1 rounded-full bg-emerald-500 transition-all duration-500"
-                  style={{ width: `${Math.min(attendanceSummary.percent, 100)}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Session dot timeline */}
-        {records.length > 0 && (
-          <div className="mb-4">
-            <div className="text-xs text-slate-500 mb-2.5">Past sessions</div>
-            <div className="flex gap-4 flex-wrap">
-              {[...records].reverse().slice(0, 10).map((rec, i) => (
-                <div key={i} className="flex flex-col items-center gap-1.5">
-                  <div
-                    className={`h-2.5 w-2.5 rounded-full ${getDotColor(rec.status)}`}
-                    title={`${rec.date}: ${rec.status}`}
-                  />
-                  <span className="text-[10px] font-mono text-slate-600">
-                    {rec.date.slice(5)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-      </section>
+      {/* ── Row 2: session history (full width) ── */}
+      <StudentDetailsPanel
+        selectedStudent={displayStudent}
+        computeStatus={computeStatus}
+        onOverrideStatusChange={() => {}}
+        showOverrideControls={false}
+        preview={false}
+      />
     </DashboardLayout>
   );
 }
