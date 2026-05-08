@@ -258,7 +258,9 @@ export default function StudentDashboard({
   return (
     <DashboardLayout title="Student Dashboard" onLogout={onLogout} onBack={onBackToCourses}>
       {loadError && (
-        <p className="text-xs text-red-400 mb-3">{loadError}</p>
+        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+          {loadError}
+        </p>
       )}
 
       {/* Top overview */}
@@ -288,8 +290,10 @@ export default function StudentDashboard({
 
       {/* Bottom: card view */}
       <section>
-        <h2 className="text-sm font-semibold mb-2">Quick Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <h2 className="text-sm font-semibold text-slate-100 pb-2 border-b border-slate-800/60 mb-4">
+          Today&apos;s Status
+        </h2>
+        <div className="max-w-sm">
           <StudentCard
             student={{ ...displayStudent, status: effectiveStatus }}
             attendanceSummary={attendanceSummary}
