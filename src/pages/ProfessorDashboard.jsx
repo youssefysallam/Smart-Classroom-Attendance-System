@@ -623,16 +623,14 @@ export default function ProfessorDashboard({ courseDocId, courseMeta, onLogout, 
           </div>
         </div>
 
-        <div className="ring-1 ring-slate-800/60 rounded-2xl">
-          <StudentDetailsPanel
-            selectedStudent={selectedStudent}
-            computeStatus={computeStatus}
-            onOverrideStatusChange={setOverrideStatus}
-            showOverrideControls={true}
-            onDeleteStudent={handleDeleteStudent}
-            preview={true}
-          />
-        </div>
+        <StudentDetailsPanel
+          selectedStudent={selectedStudent}
+          computeStatus={computeStatus}
+          onOverrideStatusChange={setOverrideStatus}
+          showOverrideControls={true}
+          onDeleteStudent={handleDeleteStudent}
+          preview={true}
+        />
       </section>
 
       {/* Bottom: student cards */}
