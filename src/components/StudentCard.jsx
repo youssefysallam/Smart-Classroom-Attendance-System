@@ -1,117 +1,90 @@
 import { formatTotalDuration } from '../utils/time.jsx';
 
-const statusColorMap = {
-  ON_TIME: "emerald",
-  LATE: "red",
-  PENDING: "amber",
-  ABSENT: "fuchsia",
-  SKIPPED: "pink",
-  EXCUSED: "blue",
-  UNKNOWN: "slate"
+const STATUS_STYLES = {
+  ON_TIME: {
+    badge: "border-emerald-500/60 text-emerald-300 bg-emerald-500/10",
+    border: "border-l-emerald-500",
+  },
+  LATE: {
+    badge: "border-red-500/60 text-red-300 bg-red-500/10",
+    border: "border-l-red-500",
+  },
+  PENDING: {
+    badge: "border-amber-500/60 text-amber-300 bg-amber-500/10",
+    border: "border-l-amber-500",
+  },
+  ABSENT: {
+    badge: "border-fuchsia-500/60 text-fuchsia-300 bg-fuchsia-500/10",
+    border: "border-l-fuchsia-500",
+  },
+  SKIPPED: {
+    badge: "border-pink-500/60 text-pink-300 bg-pink-500/10",
+    border: "border-l-pink-500",
+  },
+  EXCUSED: {
+    badge: "border-blue-500/60 text-blue-300 bg-blue-500/10",
+    border: "border-l-blue-500",
+  },
+  UNKNOWN: {
+    badge: "border-slate-500/60 text-slate-400 bg-slate-500/10",
+    border: "border-l-slate-500",
+  },
 };
 
 export default function StudentCard({ student, attendanceSummary, onClick }) {
-  // uid - Unique identifier based on the students' NFC card
-  // Visits - Number of times a student clocks in and out during class
-  // totalSeconds - Total time (in seconds) a student has spent in class
-  // lastArrival - Timestamp of the student's last arrival
-  // lastLeave - Timestamp of the student's last leave
-  // Note: lastArrival and lastLeave does not show previous arrival and leave times.
-  //       That's why visits exists, which shows if a student has been in class multiple times.
-  // Status - ON_TIME, LATE, ABSENT, PENDING, SKIPPED, EXCUSED.
-  //          If class has started and the student has not arrived, status is PENDING.
-  //          If a student has arrived within the allowed time, status is ON_TIME.
-  //          HOWEVER, if the class ends and the student has not left, status changes to ABSENT.
-  //
-  //          If a student arrives after the allowed time, status is LATE.
-  //
-  //          If a student arrived on time, but leaves early, the status is SKIPPED.
-  //
-  //          The professor can manually set a student's status to EXCUSED.
-  //
-  //          Unknown is for unknown errors/occurences for students informations. Professor
-  //          should review the students' information and can excuse them or change their status
-  //          as needed.
-  const {
-    name,
-    uid,
-    totalSeconds,
-    lastArrival,
-    lastLeave,
-    status,
-    overrideStatus,
-  } = student;
-// TODO: Maybe add array to store all arrival/leave times?
-
-  // Turns a students totalSeconds into a HH:MM:SS format
-  // Returns the total time a student spent in a class
-  // function formatDuration(totalSeconds = 0) {
-  //   const hour = Math.floor(totalSeconds / 3600);
-  //   const minutes = Math.floor((totalSeconds % 3600) / 60);
-  //   const seconds = totalSeconds % 60;
-  //   return `${hour}h ${minutes}m ${seconds}s`;
-  // }
-
-  const color = statusColorMap[status] || "slate";
+  const { name, uid, totalSeconds, lastArrival, lastLeave, status } = student;
+  const styles = STATUS_STYLES[status] || STATUS_STYLES.UNKNOWN;
   const { attended = 0, total = 0, percent = 0 } = attendanceSummary || {};
-  
+
   return (
     <button
       onClick={onClick}
-      /* Border Radius: https://tailwindcss.com/docs/border-radius */
-      /* Width Percentage: https://tailwindcss.com/docs/width#using-a-percentage */
-      /* Text Alignment: https://tailwindcss.com/docs/text-align#left-aligning-text */
-      /* Margin: https://tailwindcss.com/docs/margin#adding-space-between-children */
-      /* Color: bg = background, hover = on mouse hover, transition-colors = smooth color change */
-      /* bg-slate-900/70 = slate color with 70% opacity */
-      /* bg-slate-900 = solid slate color with 100% opacity */
-      className="w-full text-left rounded-2xl border border-slate-800 bg-slate-900/70 p-4 
-                  hover:border-emerald-500 hover:bg-slate-900
-                  hover:shadow-lg hover:shadow-emerald-500/50
-                  hover:-translate-y-1 hover:scale-101
-                  transition-all duration-400 cursor-pointer"
+      className={`w-full text-left rounded-2xl border border-slate-800 border-l-4 ${styles.border}
+                  bg-slate-900/70 p-4
+                  hover:border-emerald-500 hover:border-l-4 hover:bg-slate-900
+                  hover:shadow-lg hover:shadow-emerald-500/20
+                  hover:-translate-y-1
+                  transition-all duration-300 cursor-pointer`}
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="font-semibold text-slate-100">
-            {name || "Unknown Student"}
-          </div>
-          <div className="text-xs text-slate-400">{uid}</div>
+          <div className="font-semibold text-slate-100">{name || "Unknown Student"}</div>
+          <div className="text-xs text-slate-500 font-mono mt-0.5">{uid}</div>
         </div>
-        <span
-          className={`text-xs px-2 py-1 rounded-full border border-${color}-500/60 text-${color}-300`}
-        >
+        <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${styles.badge}`}>
           {status || "PENDING"}
         </span>
       </div>
 
-      {/* Flex Container: https://tailwindcss.com/docs/flex */}
-      {/* Justify: https://tailwindcss.com/docs/justify-content */}
-      <div className="text-xs text-slate-400 space-y-1">
+      <div className="text-xs text-slate-400 space-y-1.5">
         <div className="flex justify-between">
-          <span>Total time:</span>
-          <span className="text-slate-100">
-            {formatTotalDuration(totalSeconds || 0)}
-          </span>
+          <span>Total time</span>
+          <span className="text-slate-200 font-medium">{formatTotalDuration(totalSeconds || 0)}</span>
         </div>
         <div className="flex justify-between">
-          <span>Last arrival:</span>
-          <span className="text-slate-100 text-right ml-2">
-            {lastArrival || "N/A"}
-          </span>
+          <span>Last arrival</span>
+          <span className="text-slate-200 font-mono">{lastArrival || "—"}</span>
         </div>
         <div className="flex justify-between">
-          <span>Last leave:</span>
-          <span className="text-slate-100 text-right ml-2">
-            {lastLeave || "N/A"}
-          </span>
+          <span>Last leave</span>
+          <span className="text-slate-200 font-mono">{lastLeave || "—"}</span>
         </div>
-        <div className="flex justify-between">
-          <span>Attendance:</span>
-          <span className="text-slate-100">
-            {total > 0 ? `${percent.toFixed(2)}% (${attended}/${total})` : "N/A"}
-          </span>
-        </div>
+        {total > 0 && (
+          <div className="pt-1">
+            <div className="flex justify-between mb-1">
+              <span>Attendance</span>
+              <span className="text-slate-200 font-medium">
+                {percent.toFixed(0)}% ({attended}/{total})
+              </span>
+            </div>
+            <div className="h-1 w-full rounded-full bg-slate-800 overflow-hidden">
+              <div
+                className="h-1 rounded-full bg-emerald-500 transition-all duration-500"
+                style={{ width: `${Math.min(percent, 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </button>
   );
