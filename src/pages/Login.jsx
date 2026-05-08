@@ -41,6 +41,21 @@ export default function Login({ onLogin }) {
       }
 
       const uidUpper = trimmed.toUpperCase();
+
+      // No Firebase config — skip Firestore and use mock data directly
+      if (!import.meta.env.VITE_PROJECT_ID) {
+        const mock = lookupMockStudent(uidUpper);
+        if (mock) {
+          onLogin({
+            role: "student",
+            user: { id: mock.uid, uid: mock.uid, name: mock.name, ...mock },
+          });
+        } else {
+          setError("No student found with that UID.");
+        }
+        return;
+      }
+
       const ref = doc(db, "students", uidUpper);
       const snap = await getDoc(ref);
 
