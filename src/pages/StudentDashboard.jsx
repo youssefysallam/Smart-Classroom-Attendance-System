@@ -79,7 +79,6 @@ export default function StudentDashboard({
   const [courseStudent, setCourseStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     if (!courseDocId || !uid) return;
@@ -103,7 +102,6 @@ export default function StudentDashboard({
           setLoadError("");
         } else {
           setCourseStudent(null);
-          setShowDetails(false);
           setLoadError("You are not registered for this course in the system.");
         }
         setLoading(false);
@@ -238,7 +236,7 @@ export default function StudentDashboard({
         />
 
         <StudentDetailsPanel
-          selectedStudent={showDetails ? displayStudent : null}
+          selectedStudent={displayStudent}
           computeStatus={computeStatus}
           onOverrideStatusChange={() => {}}
           showOverrideControls={false}
@@ -323,14 +321,6 @@ export default function StudentDashboard({
           </div>
         )}
 
-        {/* Toggle details */}
-        <button
-          type="button"
-          onClick={() => setShowDetails((prev) => !prev)}
-          className="text-xs text-slate-500 hover:text-emerald-400 transition-colors duration-200 cursor-pointer"
-        >
-          {showDetails ? "↑ Hide session details" : "↓ View session details"}
-        </button>
       </section>
     </DashboardLayout>
   );
