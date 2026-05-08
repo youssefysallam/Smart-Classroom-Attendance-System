@@ -36,6 +36,17 @@ function getAttendanceShadow(percent) {
   return "shadow-red-500";
 }
 
+function getStatusBorderColor(status) {
+  switch (status) {
+    case "ON_TIME":  return "border-l-emerald-500";
+    case "LATE":     return "border-l-amber-500";
+    case "ABSENT":   return "border-l-red-500";
+    case "SKIPPED":  return "border-l-red-400";
+    case "EXCUSED":  return "border-l-purple-500";
+    default:         return "border-l-slate-600";
+  }
+}
+
 export default function StudentDetailsPanel({
   selectedStudent,
   computeStatus,
@@ -47,11 +58,16 @@ export default function StudentDetailsPanel({
   // Nothing selected
   if (!selectedStudent) {
     return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-        <h2 className="text-sm font-semibold mb-3">Student details</h2>
-        <p className="text-xs text-slate-400">
-          Click on a student card to see more details here.
-        </p>
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 flex flex-col items-center justify-center gap-3 min-h-[140px]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800/80 border border-slate-700">
+          <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          </svg>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-medium text-slate-400">No student selected</p>
+          <p className="text-xs text-slate-600 mt-0.5">Click a student card to view details.</p>
+        </div>
       </div>
     );
   }
@@ -162,7 +178,7 @@ export default function StudentDetailsPanel({
           <div>
             <span className="text-slate-400 text-xs">Override Status</span>
             <select
-              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500
+              className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/60 focus:border-emerald-500/60
                          hover:border-emerald-500 hover:bg-slate-900 transition-colors ease-in-out cursor-pointer"
               value={viewStudent.overrideStatus || ""}
               onChange={(e) =>
@@ -258,7 +274,7 @@ export default function StudentDetailsPanel({
                 return (
                   <div
                     key={`${rec.date}-${idx}`}
-                    className="flex justify-between items-baseline text-[11px] border border-slate-800 rounded-lg px-2 py-1 bg-slate-950/60"
+                    className={`flex justify-between items-baseline text-[11px] border border-slate-800 border-l-[3px] ${getStatusBorderColor(effStatus)} rounded-lg px-2 py-1 bg-slate-950/60`}
                   >
                     <div>
                       <div className="font-medium text-slate-100">
