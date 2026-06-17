@@ -1,6 +1,6 @@
 # Smart Classroom Attendance System
 
-An NFC-powered attendance tracking system for college classrooms. Students tap their NFC card at an ESP32-based reader; the React frontend updates in real time via Firestore and lets professors configure grace periods, finalize records, and override individual statuses.
+An NFC-powered attendance tracking system for college classrooms. Students tap their NFC card at an ESP32-based reader; the React frontend updates in real time via Firestore and lets professors configure grace periods, finalize records, and override individual statuses. 
 
 ---
 
